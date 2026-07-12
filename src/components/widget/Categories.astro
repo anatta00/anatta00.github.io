@@ -5,12 +5,105 @@ import { getCategoryList } from "../../utils/content-utils";
 import ButtonLink from "../control/ButtonLink.astro";
 import WidgetLayout from "./WidgetLayout.astro";
 
-const categories = await getCategoryList();
+const rawCategories = await getCategoryList();
+
+interface CategoryItem {
+	name: string;
+	parent: string;
+	child: string | null;
+	count: number;
+	url: string;
+}
+
+const items: CategoryItem[] = rawCategories.map((c) => {
+	const parts = c.name.split("/");
+	if (parts.length > 1) {
+		return {
+			name: c.name,
+			parent: parts[0].trim(),
+			child: parts.slice(1).join("/").trim(),
+			count: c.count,
+			url: c.url,
+		};
+	}
+	return {
+		name: c.name,
+		parent: c.name.trim(),
+		child: null,
+		count: c.count,
+		url: c.url,
+	};
+});
+
+// Group by parent
+const groups: {
+	[parent: string]: { parentItem?: CategoryItem; children: CategoryItem[] };
+} = {};
+for (const item of items) {
+	if (!groups[item.parent]) {
+		groups[item.parent] = { children: [] };
+	}
+	if (item.child === null) {
+		groups[item.parent].parentItem = item;
+	} else {
+		groups[item.parent].children.push(item);
+	}
+}
+
+// Flatten back into a display list
+interface DisplayItem {
+	displayName: string;
+	fullName: string;
+	url: string;
+	count: number;
+	isChild: boolean;
+}
+
+const displayItems: DisplayItem[] = [];
+// Sort parents alphabetically
+const sortedParents = Object.keys(groups).sort((a, b) =>
+	a.toLowerCase().localeCompare(b.toLowerCase()),
+);
+
+for (const parent of sortedParents) {
+	const g = groups[parent];
+	if (g.parentItem) {
+		displayItems.push({
+			displayName: g.parentItem.parent,
+			fullName: g.parentItem.name,
+			url: g.parentItem.url,
+			count: g.parentItem.count,
+			isChild: false,
+		});
+	} else {
+		// If child exists but parent category doesn't have an explicit post, render a dummy parent label
+		displayItems.push({
+			displayName: parent,
+			fullName: parent,
+			url: `/archive/?category=${encodeURIComponent(parent)}`,
+			count: g.children.reduce((acc, c) => acc + c.count, 0),
+			isChild: false,
+		});
+	}
+	// Sort children
+	g.children.sort((a, b) =>
+		(a.child || "").toLowerCase().localeCompare((b.child || "").toLowerCase()),
+	);
+	for (const child of g.children) {
+		displayItems.push({
+			displayName: `↳ ${child.child}`,
+			fullName: child.name,
+			url: child.url,
+			count: child.count,
+			isChild: true,
+		});
+	}
+}
 
 const COLLAPSED_HEIGHT = "7.5rem";
 const COLLAPSE_THRESHOLD = 5;
 
-const isCollapsed = categories.length >= COLLAPSE_THRESHOLD;
+const isCollapsed = displayItems.length >= COLLAPSE_THRESHOLD;
 
 interface Props {
 	class?: string;
@@ -23,13 +116,15 @@ const style = Astro.props.style;
 <WidgetLayout name={i18n(I18nKey.categories)} id="categories" isCollapsed={isCollapsed} collapsedHeight={COLLAPSED_HEIGHT}
                 class={className} style={style}
 >
-    {categories.map((c) =>
-        <ButtonLink
-            url={c.url}
-            badge={String(c.count)}
-            label={`View all posts in the ${c.name.trim()} category`}
-        >
-            {c.name.trim()}
-        </ButtonLink>
-    )}
+    {displayItems.map((c) => (
+        <div class={c.isChild ? "pl-4 opacity-80" : ""}>
+            <ButtonLink
+                url={c.url}
+                badge={String(c.count)}
+                label={`View all posts in the ${c.fullName} category`}
+            >
+                {c.displayName}
+            </ButtonLink>
+        </div>
+    ))}
 </WidgetLayout>

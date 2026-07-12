@@ -53,9 +53,14 @@ onMount(async () => {
 	}
 
 	if (categories.length > 0) {
-		filteredPosts = filteredPosts.filter(
-			(post) => post.data.category && categories.includes(post.data.category),
-		);
+		filteredPosts = filteredPosts.filter((post) => {
+			if (!post.data.category) return false;
+			return categories.some((cat) => {
+				const trimmedCat = cat.trim();
+				const postCat = post.data.category.trim();
+				return postCat === trimmedCat || postCat.startsWith(trimmedCat + " / ");
+			});
+		});
 	}
 
 	if (uncategorized) {

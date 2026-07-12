@@ -4,7 +4,7 @@ published: 2026-07-12
 description: "전뇌화(Cyberization) 수술 후 발생할 수 있는 마인드 해킹 및 신경 정보 침입을 방어하기 위한 인지 방벽(Cognitive Shielding) 구축 프로토콜과 뉴로-보안 기초 연구."
 image: ""
 tags: [전뇌화, 정보보안, 심리학, 뇌과학, 인지방벽]
-category: "전뇌 보안 / Neuro-Security"
+category: "정보보안 / 인지보안"
 draft: false
 lang: "ko"
 ---
