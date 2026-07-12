@@ -1,0 +1,14 @@
+---
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+---
+<MainGridLayout title="404 Not Found" description="Page not found">
+    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
+        <div class="card-base z-10 px-9 py-16 relative w-full flex flex-col items-center justify-center text-center">
+            <h1 class="text-6xl font-bold text-[var(--primary)] mb-4">404</h1>
+            <p class="text-xl text-black/50 dark:text-white/50 mb-8 font-medium">Page Not Found / 페이지를 찾을 수 없습니다.</p>
+            <a href="/" class="px-6 py-2.5 bg-[var(--btn-regular-bg)] dark:bg-[var(--primary)] text-[var(--btn-content)] dark:text-[var(--deep-text)] rounded-lg transition font-medium hover:brightness-95 active:brightness-90">
+                Go to Home / 홈으로 돌아가기
+            </a>
+        </div>
+    </div>
+</MainGridLayout>
